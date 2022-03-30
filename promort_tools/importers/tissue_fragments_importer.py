@@ -66,7 +66,7 @@ class TissueFragmentsImporter(object):
             shapes = json.load(f_obj)["shapes"]
 
         for shape in shapes:
-            self.logger.info("add to collection %s shape %s", collection_id, shape)
+            self.logger.debug("add to collection %s shape %s", collection_id, shape)
             self._create_fragment(collection_id, shape)
 
         self.promort_client.logout()
