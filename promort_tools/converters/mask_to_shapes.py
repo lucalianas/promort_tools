@@ -42,6 +42,7 @@ def convert_to_shapes(
     original_resolution: Tuple[int, int],
     threshold: int,
     scaler: "Scaler",
+    simplify_tolerance: float,
 ):
     def _apply_threshold(mask: np.ndarray, threshold: int) -> np.ndarray:
         mask[mask < threshold] = 0
@@ -60,7 +61,11 @@ def convert_to_shapes(
         for x in contour:
             normalize_contour.append(tuple(x[0]))
         try:
-            return Shape(normalize_contour)
+            s = Shape(normalize_contour)
+            if simplify_tolerance > 0:
+                LOGGER.debug(f"simplify with tolerance {simplify_tolerance}")
+                s.simplify(simplify_tolerance)
+            return s
         except ValueError:
             return None
 
@@ -98,6 +103,9 @@ class Shape:
 
     def __str__(self):
         return str(self._polygon)
+
+    def simplify(self, tolerance):
+        self._polygon = self._polygon.simplify(tolerance, preserve_topology=True)
 
     def get_bounds(self):
         bounds = self._polygon.bounds
@@ -167,7 +175,9 @@ def main(argv):
     threshold = round(args.threshold * 100) if round_to_0_100 else args.threshold
 
     scaler = BasicScaler()
-    shapes = convert_to_shapes(mask, original_resolution, threshold, scaler)
+    shapes = convert_to_shapes(
+        mask, original_resolution, threshold, scaler, args.simplify_tolerance
+    )
 
     _save_shapes(shapes, args.out_file)
 
@@ -192,6 +202,22 @@ def _make_parser():
         required=True,
         help="threshold for generating the ROI. Float in range [0, 1].",
     )
+    scale_funcs = ("shapely", "fit", "pyclipper")
+    parser.add_argument(
+        "--scale-func",
+        dest="scale_func",
+        type=str,
+        choices=scale_funcs,
+        default=scale_funcs[0],
+        help="log file (default=stderr)",
+    )
+    parser.add_argument(
+        "--simplify",
+        dest="simplify_tolerance",
+        type=float,
+        default=0.0,
+        help="apply shapely's simplify method with given tolerance to the generated shapes",
+    )
     parser.add_argument(
         "--log-level",
         type=str,
@@ -201,16 +227,6 @@ def _make_parser():
     )
     parser.add_argument(
         "--log-file", type=str, default=None, help="log file (default=stderr)"
-    )
-
-    scale_funcs = ("shapely", "fit", "pyclipper")
-    parser.add_argument(
-        "--scale-func",
-        dest="scale_func",
-        type=str,
-        choices=scale_funcs,
-        default=scale_funcs[0],
-        help="log file (default=stderr)",
     )
     return parser
 
