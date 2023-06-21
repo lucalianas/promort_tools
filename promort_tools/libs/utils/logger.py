@@ -25,7 +25,7 @@ LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 
 
 def get_logger(log_level, log_file, mode='a'):
-    logger = logging.getLogger('odin')
+    logger = logging.getLogger('promort_tools')
     if not isinstance(log_level, int):
         try:
             log_level = getattr(logging, log_level)

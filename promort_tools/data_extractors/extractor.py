@@ -54,7 +54,7 @@ class ProMortDataExtractor(object):
             type=str,
             choices=LOG_LEVELS,
             default="INFO",
-            help="logging level (default=INFO",
+            help="logging level (default=INFO)",
         )
         parser.add_argument(
             "--log-file", type=str, default=None, help="log file (default=stderr)"
