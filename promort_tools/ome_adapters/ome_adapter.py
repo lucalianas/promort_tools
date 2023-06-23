@@ -78,8 +78,8 @@ def main(argv=None):
         )
         args.func(ome_connection, logger, args)
     except argparse.ArgumentError as arg_err:
-        logger.critical(arg_err)
-        sys.exit(arg_err)
+        logger.critical(arg_err.message)
+        sys.exit(arg_err.message)
 
 
 if __name__ == "__main__":
