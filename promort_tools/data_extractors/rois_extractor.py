@@ -85,17 +85,11 @@ class ROIsExtractor(object):
             points = self._extract_points(roi_data['roi_json'])
             if roi_type == 'slice':
                 positive = (roi_data.get('positive_cores_count') > 0)
-                parent_type = None
-                parent_id = None
             elif roi_type == 'core':
                 positive = roi_data.get('positive')
-                parent_type = 'slice'
-                parent_id = None
             elif roi_type == 'focus_region':
                 positive = (roi_data.get('tissue_status') == 'TUMOR')
-                parent_type = 'core'
-                parent_id = None
-        return points, positive, parent_type, parent_id
+        return roi_data['label'], points, positive
 
     def _serialize_points_list(self, roi_id, roi_type, points, out_path):
         fname = f'{roi_type}_{roi_id}.json'
@@ -113,16 +107,17 @@ class ROIsExtractor(object):
         rois_list = self._load_rois_list(args.slide_label, args.roi_type)
         roi_details = []
         for roi in rois_list:
-            points, positive, parent_type, parent_id = self._get_roi_details(roi['roi_id'], roi['roi_type'])
+            label, points, positive = self._get_roi_details(roi['roi_id'], roi['roi_type'])
             fname = self._serialize_points_list(roi['roi_id'], roi['roi_type'], points, args.out_folder)
             roi_details.append({
                 'roi_id': roi['roi_id'],
+                'roi_label': label,
                 'roi_type': roi['roi_type'],
                 'annotation_step': roi['annotation_step'],
                 'shape_file': os.path.join(args.out_folder, fname),
                 'positive': positive,
-                'roi_parent_type': parent_type,
-                'roi_parent_id': parent_id
+                'roi_parent_type': roi['parent_type'],
+                'roi_parent_id': roi['parent_id']
             })
         slide_data['rois'] = roi_details
         if args.out_file is None:
