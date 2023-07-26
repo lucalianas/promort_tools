@@ -22,7 +22,7 @@ from importlib import import_module
 
 from promort_tools.libs.utils.logger import get_logger, LOG_LEVELS
 
-SUBMODULES_NAMES = ["rois_extractor"]
+SUBMODULES_NAMES = ["rois_extractor", "slide_details"]
 
 SUBMODULES = [
     import_module("{0}.{1}".format("promort_tools.data_extractors", n))
