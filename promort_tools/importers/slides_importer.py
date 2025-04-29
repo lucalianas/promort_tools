@@ -21,7 +21,7 @@ from ..libs.client import ProMortClient
 from ..libs.client import ProMortAuthenticationError
 
 from argparse import ArgumentError
-import sys, requests
+import sys, requests, re
 from urllib.parse import urljoin
 from functools import reduce
 
@@ -33,7 +33,21 @@ class SlideImporter(object):
         self.logger = logger
 
     def _get_case_label(self, slide_label):
-        return slide_label.split('-')[0]
+        # match the patterns for slides from https://doi.org/10.57804/epa0-8v59
+        pattern_1 = r'^(?P<patient_id>patient_\d{3})_(?P<slide_id>\w+)$'
+        # match the patterns used for ProMort and DeepHealth studies
+        pattern_2 = r'^(?P<patient_id>[^-]+)-(?P<slide_id>[0-9]+)$'
+
+        match = re.match(pattern_1, slide_label)
+        if match:
+            return match.group('patient_id')
+
+        match = re.match(pattern_2, slide_label)
+        if match:
+            return match.group('patient_id')
+
+        self.logger.error(f'Invalid slide label format: {slide_label}')
+        sys.exit('ERROR: Invalid slide label format')
 
     def _import_case(self, case_label):
         response = self.promort_client.post(
